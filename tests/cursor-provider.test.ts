@@ -6,7 +6,7 @@ import { join } from "node:path";
 import test from "node:test";
 import { subscriptionLabel } from "../src/core/prices.ts";
 import { providerKeyMissing } from "../src/core/settings.ts";
-import { cursorConnected } from "../src/agent/cursor/login.ts";
+import { cursorConnected, cursorStatusLooksLoggedIn } from "../src/agent/cursor/login.ts";
 import { parseCursorModelList } from "../src/agent/cursor/provider.ts";
 import {
 	buildCursorPrompt,
@@ -64,6 +64,14 @@ test("model list keeps display names and drops the default marker", () => {
 		{ id: "composer-2.5", name: "Composer 2.5" },
 		{ id: "claude-fable-5-thinking-high", name: "Claude Fable 5 1M Thinking (NO ZDR)" },
 	]);
+});
+
+test("signed-out status text is not treated as a login", () => {
+	assert.equal(cursorStatusLooksLoggedIn("✓ Logged in as person@example.com"), true);
+	assert.equal(cursorStatusLooksLoggedIn("Login successful!"), true);
+	assert.equal(cursorStatusLooksLoggedIn("Logged in (user details not available)"), true);
+	assert.equal(cursorStatusLooksLoggedIn("Not logged in"), false);
+	assert.equal(cursorStatusLooksLoggedIn(""), false);
 });
 
 test("cursor login gates the picker", () => {

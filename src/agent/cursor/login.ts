@@ -24,8 +24,15 @@ export function cursorAgentBin(): string {
 
 let cached: boolean | null = null;
 
-/** `agent status` prints "Logged in" when the Cursor subscription is usable.
+/** `agent status` prints "Logged in as …" when the subscription is usable,
+ * and "Not logged in" when it is not. The negative line contains the
+ * positive words, so a bare search would treat signed-out as signed-in.
  * The result is cached for the process; sign in, then restart LearnHarness. */
+export function cursorStatusLooksLoggedIn(text: string): boolean {
+	if (/not logged in/i.test(text)) return false;
+	return /logged in as /i.test(text) || /login successful/i.test(text) || /logged in \(user details not available\)/i.test(text);
+}
+
 export function cursorConnected(): boolean {
 	if (process.env.NODE_ENV === "test") return process.env.LH_CURSOR_CONNECTED === "1";
 	if (cached !== null) return cached;
@@ -35,7 +42,7 @@ export function cursorConnected(): boolean {
 			encoding: "utf8",
 			stdio: ["ignore", "pipe", "pipe"],
 		});
-		cached = /logged in/i.test(out);
+		cached = cursorStatusLooksLoggedIn(out);
 	} catch {
 		cached = false;
 	}
